@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.image.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns:fx="http://javafx.com/fxml/1" fx:controller="ru.golovkov.multimediadataprocessing.ImageController">
+    <children>
+        <HBox spacing="10" alignment="CENTER">
+            <children>
+                <Button text="Выбрать изображение" onAction="#handleOpenImage"/>
+                <ComboBox fx:id="transformationComboBox" promptText="Выберите преобразование"/>
+                <Button text="Применить" onAction="#handleApplyTransformation"/>
+            </children>
+        </HBox>
+        <HBox spacing="10" alignment="CENTER">
+            <children>
+                <ImageView fx:id="originalImageView" fitWidth="300" fitHeight="300" preserveRatio="true"/>
+                <ImageView fx:id="transformedImageView" fitWidth="300" fitHeight="300" preserveRatio="true"/>
+            </children>
+        </HBox>
+    </children>
+</VBox>
