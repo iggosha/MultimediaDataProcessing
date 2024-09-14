@@ -3,7 +3,10 @@ package ru.golovkov.multimediadataprocessing;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.ComboBox;
-import javafx.scene.image.*;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.image.PixelWriter;
+import javafx.scene.image.WritableImage;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
@@ -24,19 +27,6 @@ public class ImageController implements Initializable {
 
     private Image originalImage;
 
-    private static void applyNegative(int height, int width, PixelReader pixelReader, PixelWriter pixelWriter) {
-        for (int y = 0; y < height; y++) {
-            for (int x = 0; x < width; x++) {
-                int argb = pixelReader.getArgb(x, y);
-                int a = (argb >> 24) & 0xff;
-                int r = 255 - ((argb >> 16) & 0xff);
-                int g = 255 - ((argb >> 8) & 0xff);
-                int b = 255 - (argb & 0xff);
-                int newArgb = (a << 24) | (r << 16) | (g << 8) | b;
-                pixelWriter.setArgb(x, y, newArgb);
-            }
-        }
-    }
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -69,25 +59,31 @@ public class ImageController implements Initializable {
         }
 
         Image transformedImage = null;
+        ImageWrapper originalImageWrapper = new ImageWrapper(originalImage);
+
         switch (selectedTransformation) {
-            case "Негатив" -> transformedImage = createNewImageAndApplyNegative(originalImage);
+            case "Негатив" -> transformedImage = createNewNegativeImage(originalImageWrapper);
 
         }
-
         if (transformedImage != null) {
             transformedImageView.setImage(transformedImage);
         }
     }
 
-    private Image createNewImageAndApplyNegative(Image image) {
-        int width = (int) image.getWidth();
-        int height = (int) image.getHeight();
-        WritableImage writableImage = new WritableImage(width, height);
-        PixelReader pixelReader = image.getPixelReader();
+    private Image createNewNegativeImage(ImageWrapper imageWrapper) {
+        WritableImage writableImage = new WritableImage(imageWrapper.getWidth(), imageWrapper.getHeight());
         PixelWriter pixelWriter = writableImage.getPixelWriter();
-
-        applyNegative(height, width, pixelReader, pixelWriter);
-
+        for (int y = 0; y < imageWrapper.getHeight(); y++) {
+            for (int x = 0; x < imageWrapper.getHeight(); x++) {
+                int argb = imageWrapper.getPixelReader().getArgb(x, y);
+                int a = (argb >> 24) & 0xff;
+                int r = 255 - ((argb >> 16) & 0xff);
+                int g = 255 - ((argb >> 8) & 0xff);
+                int b = 255 - (argb & 0xff);
+                int newArgb = (a << 24) | (r << 16) | (g << 8) | b;
+                pixelWriter.setArgb(x, y, newArgb);
+            }
+        }
         return writableImage;
     }
 }
