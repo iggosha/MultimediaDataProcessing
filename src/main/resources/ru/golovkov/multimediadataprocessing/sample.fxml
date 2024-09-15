@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.scene.chart.BarChart?>
+<?import javafx.scene.chart.CategoryAxis?>
+<?import javafx.scene.chart.NumberAxis?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.image.*?>
 <?import javafx.scene.layout.*?>
@@ -17,6 +20,26 @@
             <children>
                 <ImageView fx:id="originalImageView" fitWidth="300" fitHeight="300" preserveRatio="true"/>
                 <ImageView fx:id="transformedImageView" fitWidth="300" fitHeight="300" preserveRatio="true"/>
+            </children>
+        </HBox>
+        <HBox spacing="10" alignment="CENTER">
+            <children>
+                <BarChart fx:id="originalHistogramChart">
+                    <xAxis>
+                        <CategoryAxis side="BOTTOM"/>
+                    </xAxis>
+                    <yAxis>
+                        <NumberAxis side="LEFT"/>
+                    </yAxis>
+                </BarChart>
+                <BarChart fx:id="transformedHistogramChart">
+                    <xAxis>
+                        <CategoryAxis side="BOTTOM"/>
+                    </xAxis>
+                    <yAxis>
+                        <NumberAxis side="LEFT"/>
+                    </yAxis>
+                </BarChart>
             </children>
         </HBox>
     </children>
