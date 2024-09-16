@@ -5,6 +5,7 @@ import javafx.fxml.Initializable;
 import javafx.scene.chart.BarChart;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.Slider;
 import javafx.scene.image.*;
 import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
@@ -32,10 +33,26 @@ public class ImageController implements Initializable {
     @FXML
     private BarChart<String, Number> transformedHistogramChart;
 
+    @FXML
+    private Slider minBrightnessSlider;
+
+    @FXML
+    private Slider maxBrightnessSlider;
+
+    @FXML
+    private Slider gammaSlider;
+
+    @FXML
+    private Slider scaleSlider;
+
     private Image originalImage;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
+        gammaSlider.setVisible(false);
+        minBrightnessSlider.setVisible(false);
+        maxBrightnessSlider.setVisible(false);
+        scaleSlider.setVisible(false);
         transformationComboBox.getItems().addAll(
                 "Негатив",
                 "Степенное преобразование",
@@ -65,6 +82,10 @@ public class ImageController implements Initializable {
 
     @FXML
     private void handleApplyTransformation() {
+        gammaSlider.setVisible(false);
+        minBrightnessSlider.setVisible(false);
+        maxBrightnessSlider.setVisible(false);
+        scaleSlider.setVisible(false);
         if (originalImage == null) {
             return;
         }
@@ -79,11 +100,17 @@ public class ImageController implements Initializable {
         ImageWrapper originalImageWrapper = new ImageWrapper(originalImage);
 
         switch (selectedTransformation) {
-            case "Негатив" -> transformedImage = createNewNegativeImage(originalImageWrapper);
-            case "Степенное преобразование" ->
-                    transformedImage = createPowerLawTransformation(originalImageWrapper, 1.0, 2.0);
-            case "Вырезание диапазона яркостей" ->
-                    transformedImage = createBrightnessRangeCut(originalImageWrapper, 50, 200);
+            case "Негатив" -> transformedImage = createNegativeImage(originalImageWrapper);
+            case "Степенное преобразование" -> {
+                gammaSlider.setVisible(true);
+                scaleSlider.setVisible(true);
+                transformedImage = createPowerLawTransformation(originalImageWrapper, scaleSlider.getValue(), gammaSlider.getValue());
+            }
+            case "Вырезание диапазона яркостей" -> {
+                minBrightnessSlider.setVisible(true);
+                maxBrightnessSlider.setVisible(true);
+                transformedImage = createBrightnessRangeCut(originalImageWrapper, (int) minBrightnessSlider.getValue(), (int) maxBrightnessSlider.getValue());
+            }
             case "Линейный сглаживающий (усредняющий) фильтр" ->
                     transformedImage = createAverageFilter(originalImageWrapper);
             case "Медианный фильтр" -> transformedImage = createMedianFilter(originalImageWrapper);
@@ -112,20 +139,18 @@ public class ImageController implements Initializable {
         histogramChart.getData().add(series);
     }
 
-    // Остальные методы остаются без изменений
-
-    private Image createNewNegativeImage(ImageWrapper imageWrapper) {
+    private Image createNegativeImage(ImageWrapper imageWrapper) {
         WritableImage writableImage = new WritableImage(imageWrapper.getWidth(), imageWrapper.getHeight());
         PixelWriter pixelWriter = writableImage.getPixelWriter();
         PixelReader pixelReader = imageWrapper.getPixelReader();
         for (int y = 0; y < imageWrapper.getHeight(); y++) {
             for (int x = 0; x < imageWrapper.getWidth(); x++) {
                 Color color = pixelReader.getColor(x, y);
-                double r = 1.0 - color.getRed();
-                double g = 1.0 - color.getGreen();
-                double b = 1.0 - color.getBlue();
-                double a = color.getOpacity();
-                pixelWriter.setColor(x, y, new Color(r, g, b, a));
+                double red = 1.0 - color.getRed();
+                double green = 1.0 - color.getGreen();
+                double blue = 1.0 - color.getBlue();
+                double opacity = color.getOpacity();
+                pixelWriter.setColor(x, y, new Color(red, green, blue, opacity));
             }
         }
         return writableImage;
@@ -138,11 +163,11 @@ public class ImageController implements Initializable {
         for (int y = 0; y < imageWrapper.getHeight(); y++) {
             for (int x = 0; x < imageWrapper.getWidth(); x++) {
                 Color color = pixelReader.getColor(x, y);
-                double r = c * Math.pow(color.getRed(), gamma);
-                double g = c * Math.pow(color.getGreen(), gamma);
-                double b = c * Math.pow(color.getBlue(), gamma);
-                double a = color.getOpacity();
-                pixelWriter.setColor(x, y, new Color(r, g, b, a));
+                double red = c * Math.pow(color.getRed(), gamma);
+                double green = c * Math.pow(color.getGreen(), gamma);
+                double blue = c * Math.pow(color.getBlue(), gamma);
+                double opacity = color.getOpacity();
+                pixelWriter.setColor(x, y, new Color(red, green, blue, opacity));
             }
         }
         return writableImage;
@@ -155,18 +180,18 @@ public class ImageController implements Initializable {
         for (int y = 0; y < imageWrapper.getHeight(); y++) {
             for (int x = 0; x < imageWrapper.getWidth(); x++) {
                 Color color = pixelReader.getColor(x, y);
-                double r = color.getRed() * 255;
-                double g = color.getGreen() * 255;
-                double b = color.getBlue() * 255;
-                if (r < minBrightness || r > maxBrightness || g < minBrightness || g > maxBrightness || b < minBrightness || b > maxBrightness) {
-                    r = g = b = 0;
+                double red = color.getRed() * 255;
+                double green = color.getGreen() * 255;
+                double blue = color.getBlue() * 255;
+                if (red < minBrightness || red > maxBrightness || green < minBrightness || green > maxBrightness || blue < minBrightness || blue > maxBrightness) {
+                    red = green = blue = 0;
                 } else {
-                    r /= 255;
-                    g /= 255;
-                    b /= 255;
+                    red /= 255;
+                    green /= 255;
+                    blue /= 255;
                 }
-                double a = color.getOpacity();
-                pixelWriter.setColor(x, y, new Color(r, g, b, a));
+                double opacity = color.getOpacity();
+                pixelWriter.setColor(x, y, new Color(red, green, blue, opacity));
             }
         }
         return writableImage;
@@ -178,22 +203,22 @@ public class ImageController implements Initializable {
         PixelReader pixelReader = imageWrapper.getPixelReader();
         for (int y = 1; y < imageWrapper.getHeight() - 1; y++) {
             for (int x = 1; x < imageWrapper.getWidth() - 1; x++) {
-                double sumR = 0;
-                double sumG = 0;
-                double sumB = 0;
+                double sumRed = 0;
+                double sumGreen = 0;
+                double sumBlue = 0;
                 for (int ky = -1; ky <= 1; ky++) {
                     for (int kx = -1; kx <= 1; kx++) {
                         Color color = pixelReader.getColor(x + kx, y + ky);
-                        sumR += color.getRed();
-                        sumG += color.getGreen();
-                        sumB += color.getBlue();
+                        sumRed += color.getRed();
+                        sumGreen += color.getGreen();
+                        sumBlue += color.getBlue();
                     }
                 }
-                double a = pixelReader.getColor(x, y).getOpacity();
-                double r = sumR / 9;
-                double g = sumG / 9;
-                double b = sumB / 9;
-                pixelWriter.setColor(x, y, new Color(r, g, b, a));
+                double opacity = pixelReader.getColor(x, y).getOpacity();
+                double red = sumRed / 9;
+                double green = sumGreen / 9;
+                double blue = sumBlue / 9;
+                pixelWriter.setColor(x, y, new Color(red, green, blue, opacity));
             }
         }
         return writableImage;
@@ -205,27 +230,27 @@ public class ImageController implements Initializable {
         PixelReader pixelReader = imageWrapper.getPixelReader();
         for (int y = 1; y < imageWrapper.getHeight() - 1; y++) {
             for (int x = 1; x < imageWrapper.getWidth() - 1; x++) {
-                double[] rValues = new double[9];
-                double[] gValues = new double[9];
-                double[] bValues = new double[9];
+                double[] redValues = new double[9];
+                double[] greenValues = new double[9];
+                double[] blueValues = new double[9];
                 int index = 0;
                 for (int ky = -1; ky <= 1; ky++) {
                     for (int kx = -1; kx <= 1; kx++) {
                         Color color = pixelReader.getColor(x + kx, y + ky);
-                        rValues[index] = color.getRed();
-                        gValues[index] = color.getGreen();
-                        bValues[index] = color.getBlue();
+                        redValues[index] = color.getRed();
+                        greenValues[index] = color.getGreen();
+                        blueValues[index] = color.getBlue();
                         index++;
                     }
                 }
-                Arrays.sort(rValues);
-                Arrays.sort(gValues);
-                Arrays.sort(bValues);
-                double a = pixelReader.getColor(x, y).getOpacity();
-                double r = rValues[4];
-                double g = gValues[4];
-                double b = bValues[4];
-                pixelWriter.setColor(x, y, new Color(r, g, b, a));
+                Arrays.sort(redValues);
+                Arrays.sort(greenValues);
+                Arrays.sort(blueValues);
+                double opacity = pixelReader.getColor(x, y).getOpacity();
+                double red = redValues[4];
+                double green = greenValues[4];
+                double blue = blueValues[4];
+                pixelWriter.setColor(x, y, new Color(red, green, blue, opacity));
             }
         }
         return writableImage;
@@ -242,28 +267,28 @@ public class ImageController implements Initializable {
                 Color color3 = pixelReader.getColor(x, y + 1);
                 Color color4 = pixelReader.getColor(x + 1, y + 1);
 
-                double r1 = color1.getRed();
-                double g1 = color1.getGreen();
-                double b1 = color1.getBlue();
+                double red1 = color1.getRed();
+                double green1 = color1.getGreen();
+                double blue1 = color1.getBlue();
 
-                double r2 = color2.getRed();
-                double g2 = color2.getGreen();
-                double b2 = color2.getBlue();
+                double red2 = color2.getRed();
+                double green2 = color2.getGreen();
+                double blue2 = color2.getBlue();
 
-                double r3 = color3.getRed();
-                double g3 = color3.getGreen();
-                double b3 = color3.getBlue();
+                double red3 = color3.getRed();
+                double green3 = color3.getGreen();
+                double blue3 = color3.getBlue();
 
-                double r4 = color4.getRed();
-                double g4 = color4.getGreen();
-                double b4 = color4.getBlue();
+                double red4 = color4.getRed();
+                double green4 = color4.getGreen();
+                double blue4 = color4.getBlue();
 
-                double r = Math.sqrt((r1 - r4) * (r1 - r4) + (r2 - r3) * (r2 - r3));
-                double g = Math.sqrt((g1 - g4) * (g1 - g4) + (g2 - g3) * (g2 - g3));
-                double b = Math.sqrt((b1 - b4) * (b1 - b4) + (b2 - b3) * (b2 - b3));
+                double red = Math.sqrt((red1 - red4) * (red1 - red4) + (red2 - red3) * (red2 - red3));
+                double green = Math.sqrt((green1 - green4) * (green1 - green4) + (green2 - green3) * (green2 - green3));
+                double blue = Math.sqrt((blue1 - blue4) * (blue1 - blue4) + (blue2 - blue3) * (blue2 - blue3));
 
-                double a = color1.getOpacity();
-                pixelWriter.setColor(x, y, new Color(r, g, b, a));
+                double opacity = color1.getOpacity();
+                pixelWriter.setColor(x, y, new Color(red, green, blue, opacity));
             }
         }
         return writableImage;
@@ -275,22 +300,22 @@ public class ImageController implements Initializable {
         PixelReader pixelReader = imageWrapper.getPixelReader();
         for (int y = 1; y < imageWrapper.getHeight() - 1; y++) {
             for (int x = 1; x < imageWrapper.getWidth() - 1; x++) {
-                double gx = 0;
-                double gy = 0;
+                double gradientX = 0;
+                double gradientY = 0;
                 for (int ky = -1; ky <= 1; ky++) {
                     for (int kx = -1; kx <= 1; kx++) {
                         Color color = pixelReader.getColor(x + kx, y + ky);
-                        double r = color.getRed();
-                        double g = color.getGreen();
-                        double b = color.getBlue();
-                        gx += kx * (r + g + b);
-                        gy += ky * (r + g + b);
+                        double red = color.getRed();
+                        double green = color.getGreen();
+                        double blue = color.getBlue();
+                        gradientX += kx * (red + green + blue);
+                        gradientY += ky * (red + green + blue);
                     }
                 }
-                double gradient = Math.sqrt(gx * gx + gy * gy);
-                double r = Math.min(gradient, 1.0);
-                double a = pixelReader.getColor(x, y).getOpacity();
-                pixelWriter.setColor(x, y, new Color(r, r, r, a));
+                double gradient = Math.sqrt(gradientX * gradientX + gradientY * gradientY);
+                double red = Math.min(gradient, 1.0);
+                double opacity = pixelReader.getColor(x, y).getOpacity();
+                pixelWriter.setColor(x, y, new Color(red, red, red, opacity));
             }
         }
         return writableImage;
@@ -302,28 +327,28 @@ public class ImageController implements Initializable {
         PixelReader pixelReader = imageWrapper.getPixelReader();
         for (int y = 1; y < imageWrapper.getHeight() - 1; y++) {
             for (int x = 1; x < imageWrapper.getWidth() - 1; x++) {
-                double sumR = 0;
-                double sumG = 0;
-                double sumB = 0;
+                double sumRed = 0;
+                double sumGreen = 0;
+                double sumBlue = 0;
                 for (int ky = -1; ky <= 1; ky++) {
                     for (int kx = -1; kx <= 1; kx++) {
                         Color color = pixelReader.getColor(x + kx, y + ky);
-                        sumR += color.getRed();
-                        sumG += color.getGreen();
-                        sumB += color.getBlue();
+                        sumRed += color.getRed();
+                        sumGreen += color.getGreen();
+                        sumBlue += color.getBlue();
                     }
                 }
-                Color colorCenter = pixelReader.getColor(x, y);
-                double rCenter = colorCenter.getRed();
-                double gCenter = colorCenter.getGreen();
-                double bCenter = colorCenter.getBlue();
+                Color centerColor = pixelReader.getColor(x, y);
+                double redCenter = centerColor.getRed();
+                double greenCenter = centerColor.getGreen();
+                double blueCenter = centerColor.getBlue();
 
-                double r = Math.abs(rCenter - sumR / 9);
-                double g = Math.abs(gCenter - sumG / 9);
-                double b = Math.abs(bCenter - sumB / 9);
+                double red = Math.abs(redCenter - sumRed / 9);
+                double green = Math.abs(greenCenter - sumGreen / 9);
+                double blue = Math.abs(blueCenter - sumBlue / 9);
 
-                double a = colorCenter.getOpacity();
-                pixelWriter.setColor(x, y, new Color(r, g, b, a));
+                double opacity = centerColor.getOpacity();
+                pixelWriter.setColor(x, y, new Color(red, green, blue, opacity));
             }
         }
         return writableImage;
@@ -335,10 +360,10 @@ public class ImageController implements Initializable {
         for (int y = 0; y < imageWrapper.getHeight(); y++) {
             for (int x = 0; x < imageWrapper.getWidth(); x++) {
                 Color color = pixelReader.getColor(x, y);
-                double r = color.getRed() * 255;
-                double g = color.getGreen() * 255;
-                double b = color.getBlue() * 255;
-                int gray = (int) ((r + g + b) / 3);
+                double red = color.getRed() * 255;
+                double green = color.getGreen() * 255;
+                double blue = color.getBlue() * 255;
+                int gray = (int) ((red + green + blue) / 3);
                 histogram[gray]++;
             }
         }
