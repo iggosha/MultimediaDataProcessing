@@ -27,15 +27,15 @@
                 <Slider fx:id="scaleSlider" majorTickUnit="0.25" max="1.0" min="0.1" minWidth="300.0" minorTickCount="5" showTickLabels="true" showTickMarks="true" value="1.0" />
             </children>
         </HBox>
-        <HBox alignment="CENTER" spacing="10">
+        <HBox alignment="CENTER" maxHeight="400.0" minHeight="400.0" prefHeight="400.0" spacing="25.0" style="-fx-background-color: #FFFFFF;">
             <children>
-                <ImageView fx:id="originalImageView" fitHeight="300" fitWidth="300" preserveRatio="true" />
-                <ImageView fx:id="transformedImageView" fitHeight="300" fitWidth="300" preserveRatio="true" />
+                <ImageView fx:id="originalImageView" fitHeight="400" fitWidth="400" preserveRatio="true" />
+                <ImageView fx:id="transformedImageView" fitHeight="400" fitWidth="400" preserveRatio="true" />
             </children>
         </HBox>
-        <HBox alignment="CENTER" spacing="10">
+        <HBox alignment="CENTER" maxHeight="400.0" maxWidth="1600.0" minHeight="400.0" minWidth="1600.0" prefHeight="400.0" prefWidth="1600.0" spacing="25.0">
             <children>
-                <BarChart fx:id="originalHistogramChart" barGap="100.0" categoryGap="100.0" maxHeight="400.0" maxWidth="600.0" minHeight="400.0" minWidth="600.0" prefHeight="400.0" prefWidth="600.0" title="Гистограмма оригинального изображения">
+                <BarChart fx:id="originalHistogramChart" barGap="1.0" categoryGap="1.0" maxHeight="400.0" maxWidth="700.0" minHeight="400.0" minWidth="700.0" prefHeight="400.0" prefWidth="700.0" style="-fx-background-color: #FFFFFF;" title="Гистограмма оригинального изображения">
                     <xAxis>
                         <CategoryAxis side="BOTTOM" />
                     </xAxis>
@@ -43,7 +43,7 @@
                         <NumberAxis side="LEFT" />
                     </yAxis>
                 </BarChart>
-                <BarChart fx:id="transformedHistogramChart" barGap="100.0" categoryGap="100.0" maxHeight="400.0" maxWidth="600.0" minHeight="400.0" minWidth="600.0" prefHeight="400.0" prefWidth="600.0" title="Гистограмма преобразованного изображения">
+                <BarChart fx:id="transformedHistogramChart" barGap="1.0" categoryGap="1.0" maxHeight="400.0" maxWidth="700.0" minHeight="400.0" minWidth="700.0" prefHeight="400.0" prefWidth="700.0" style="-fx-background-color: #FFFFFF;" title="Гистограмма преобразованного изображения">
                     <xAxis>
                         <CategoryAxis side="BOTTOM" />
                     </xAxis>
