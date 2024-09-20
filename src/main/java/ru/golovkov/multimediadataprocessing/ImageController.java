@@ -43,9 +43,6 @@ public class ImageController implements Initializable {
     @FXML
     private Slider gammaSlider;
 
-    @FXML
-    private Slider scaleSlider;
-
     private ImageTransformer imageTransformer;
 
     private Image originalImage;
@@ -105,9 +102,8 @@ public class ImageController implements Initializable {
         switch (selectedTransformation) {
             case "Негатив" -> transformedImage = imageTransformer.createNegativeImage(originalImageWrapper);
             case "Степенное преобразование" -> {
-                makeSlidersVisible(gammaSlider, scaleSlider);
-                transformedImage = imageTransformer.createPowerLawTransformation(originalImageWrapper,
-                        scaleSlider.getValue(), gammaSlider.getValue());
+                makeSlidersVisible(gammaSlider);
+                transformedImage = imageTransformer.createPowerLawTransformation(originalImageWrapper,gammaSlider.getValue());
             }
             case "Вырезание диапазона яркостей" -> {
                 makeSlidersVisible(minBrightnessSlider, maxBrightnessSlider);
@@ -159,7 +155,6 @@ public class ImageController implements Initializable {
         gammaSlider.setVisible(false);
         minBrightnessSlider.setVisible(false);
         maxBrightnessSlider.setVisible(false);
-        scaleSlider.setVisible(false);
     }
 
     private void makeSlidersVisible(Slider... sliders) {

@@ -27,8 +27,9 @@ public class ImageTransformer {
         return writableImage;
     }
 
-    public Image createPowerLawTransformation(ImageWrapper imageWrapper, double c, double gamma) {
+    public Image createPowerLawTransformation(ImageWrapper imageWrapper, double gamma) {
         WritableImage writableImage = new WritableImage(imageWrapper.getWidth(), imageWrapper.getHeight());
+        int c = 1;
         PixelWriter pixelWriter = writableImage.getPixelWriter();
         PixelReader pixelReader = imageWrapper.getPixelReader();
         for (int y = 0; y < imageWrapper.getHeight(); y++) {
