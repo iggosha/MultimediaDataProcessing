@@ -196,36 +196,77 @@ public class ImageTransformer {
         return writableImage;
     }
 
-    public Image createLaplacian(ImageWrapper imageWrapper) {
+    public Image createLaplacian90(ImageWrapper imageWrapper) {
         WritableImage writableImage = new WritableImage(imageWrapper.getWidth(), imageWrapper.getHeight());
         PixelWriter pixelWriter = writableImage.getPixelWriter();
         PixelReader pixelReader = imageWrapper.getPixelReader();
+
         for (int y = 1; y < imageWrapper.getHeight() - 1; y++) {
             for (int x = 1; x < imageWrapper.getWidth() - 1; x++) {
                 double sumRed = 0;
                 double sumGreen = 0;
                 double sumBlue = 0;
+
                 for (int ky = -1; ky <= 1; ky++) {
                     for (int kx = -1; kx <= 1; kx++) {
                         Color color = pixelReader.getColor(x + kx, y + ky);
-                        sumRed += color.getRed();
-                        sumGreen += color.getGreen();
-                        sumBlue += color.getBlue();
+                        sumRed += color.getRed() * LAPLACIAN_90[ky + 1][kx + 1];
+                        sumGreen += color.getGreen() * LAPLACIAN_90[ky + 1][kx + 1];
+                        sumBlue += color.getBlue() * LAPLACIAN_90[ky + 1][kx + 1];
                     }
                 }
+
+                double red = Math.min(Math.max(sumRed, 0), 1);
+                double green = Math.min(Math.max(sumGreen, 0), 1);
+                double blue = Math.min(Math.max(sumBlue, 0), 1);
+
                 Color centerColor = pixelReader.getColor(x, y);
-                double redCenter = centerColor.getRed();
-                double greenCenter = centerColor.getGreen();
-                double blueCenter = centerColor.getBlue();
-
-                double red = Math.abs(redCenter - sumRed / 9);
-                double green = Math.abs(greenCenter - sumGreen / 9);
-                double blue = Math.abs(blueCenter - sumBlue / 9);
-
                 double opacity = centerColor.getOpacity();
                 pixelWriter.setColor(x, y, new Color(red, green, blue, opacity));
             }
         }
         return writableImage;
     }
+    public Image createLaplacian45(ImageWrapper imageWrapper) {
+        WritableImage writableImage = new WritableImage(imageWrapper.getWidth(), imageWrapper.getHeight());
+        PixelWriter pixelWriter = writableImage.getPixelWriter();
+        PixelReader pixelReader = imageWrapper.getPixelReader();
+
+        for (int y = 1; y < imageWrapper.getHeight() - 1; y++) {
+            for (int x = 1; x < imageWrapper.getWidth() - 1; x++) {
+                double sumRed = 0;
+                double sumGreen = 0;
+                double sumBlue = 0;
+
+                for (int ky = -1; ky <= 1; ky++) {
+                    for (int kx = -1; kx <= 1; kx++) {
+                        Color color = pixelReader.getColor(x + kx, y + ky);
+                        sumRed += color.getRed() * LAPLACIAN_45[ky + 1][kx + 1];
+                        sumGreen += color.getGreen() * LAPLACIAN_45[ky + 1][kx + 1];
+                        sumBlue += color.getBlue() * LAPLACIAN_45[ky + 1][kx + 1];
+                    }
+                }
+
+                double red = Math.min(Math.max(sumRed, 0), 1);
+                double green = Math.min(Math.max(sumGreen, 0), 1);
+                double blue = Math.min(Math.max(sumBlue, 0), 1);
+
+                Color centerColor = pixelReader.getColor(x, y);
+                double opacity = centerColor.getOpacity();
+                pixelWriter.setColor(x, y, new Color(red, green, blue, opacity));
+            }
+        }
+        return writableImage;
+    }
+
+    private static final double[][] LAPLACIAN_90 = {
+            {0, -1, 0},
+            {-1, 4, -1},
+            {0, -1, 0}
+    };
+    private static final double[][] LAPLACIAN_45 = {
+            {-1, -1, -1},
+            {-1, 8, -1},
+            {-1, -1, -1}
+    };
 }

@@ -32,7 +32,6 @@
                 <ImageView fx:id="transformedImageView" fitHeight="400" fitWidth="400" preserveRatio="true" />
             </children>
         </HBox>
-        <!--
         <HBox alignment="CENTER" maxHeight="400.0" maxWidth="1600.0" minHeight="400.0" minWidth="1600.0" prefHeight="400.0" prefWidth="1600.0" spacing="25.0">
             <children>
                 <BarChart fx:id="originalHistogramChart" barGap="1.0" categoryGap="1.0" maxHeight="400.0" maxWidth="700.0" minHeight="400.0" minWidth="700.0" prefHeight="400.0" prefWidth="700.0" style="-fx-background-color: #FFFFFF;" title="Гистограмма оригинального изображения">
@@ -53,6 +52,5 @@
                 </BarChart>
             </children>
         </HBox>
-        -->
     </children>
 </VBox>

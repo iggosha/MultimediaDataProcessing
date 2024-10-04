@@ -63,7 +63,8 @@ public class ImageController implements Initializable {
                 "Медианный фильтр",
                 "Градиент Робертса",
                 "Градиент Собеля",
-                "Лапласиан"
+                "Лапласиан 90",
+                "Лапласиан 45"
         );
     }
 
@@ -116,7 +117,8 @@ public class ImageController implements Initializable {
             case "Градиент Робертса" ->
                     transformedImage = imageTransformer.createRobertsGradient(originalImageWrapper);
             case "Градиент Собеля" -> transformedImage = imageTransformer.createSobelGradient(originalImageWrapper);
-            case "Лапласиан" -> transformedImage = imageTransformer.createLaplacian(originalImageWrapper);
+            case "Лапласиан 90" -> transformedImage = imageTransformer.createLaplacian90(originalImageWrapper);
+            case "Лапласиан 45" -> transformedImage = imageTransformer.createLaplacian45(originalImageWrapper);
             default -> throw new IllegalArgumentException("Ничего не выбрано");
         }
     }
