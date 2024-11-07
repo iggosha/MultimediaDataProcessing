@@ -10,6 +10,9 @@ import java.util.Arrays;
 
 public class ImageTransformer {
 
+    private static final double[][] LAPLACIAN_90 = {{0, -1, 0}, {-1, 4, -1}, {0, -1, 0}};
+    private static final double[][] LAPLACIAN_45 = {{-1, -1, -1}, {-1, 8, -1}, {-1, -1, -1}};
+
     public Image createNegativeImage(ImageWrapper imageWrapper) {
         WritableImage writableImage = new WritableImage(imageWrapper.getWidth(), imageWrapper.getHeight());
         PixelWriter pixelWriter = writableImage.getPixelWriter();
@@ -227,6 +230,7 @@ public class ImageTransformer {
         }
         return writableImage;
     }
+
     public Image createLaplacian45(ImageWrapper imageWrapper) {
         WritableImage writableImage = new WritableImage(imageWrapper.getWidth(), imageWrapper.getHeight());
         PixelWriter pixelWriter = writableImage.getPixelWriter();
@@ -259,14 +263,48 @@ public class ImageTransformer {
         return writableImage;
     }
 
-    private static final double[][] LAPLACIAN_90 = {
-            {0, -1, 0},
-            {-1, 4, -1},
-            {0, -1, 0}
-    };
-    private static final double[][] LAPLACIAN_45 = {
-            {-1, -1, -1},
-            {-1, 8, -1},
-            {-1, -1, -1}
-    };
+    public Image createHistogramEqualization(ImageWrapper imageWrapper) {
+        WritableImage writableImage = new WritableImage(imageWrapper.getWidth(), imageWrapper.getHeight());
+        PixelWriter pixelWriter = writableImage.getPixelWriter();
+        PixelReader pixelReader = imageWrapper.getPixelReader();
+
+        int[] histogram = new int[256];
+        int totalPixels = imageWrapper.getWidth() * imageWrapper.getHeight();
+        for (int y = 0; y < imageWrapper.getHeight(); y++) {
+            for (int x = 0; x < imageWrapper.getWidth(); x++) {
+                Color color = pixelReader.getColor(x, y);
+                double red = color.getRed() * 255;
+                double green = color.getGreen() * 255;
+                double blue = color.getBlue() * 255;
+                int gray = (int) ((red + green + blue) / 3);
+                histogram[gray]++;
+            }
+        }
+        int[] cumulativeHistogram = new int[256];
+        cumulativeHistogram[0] = histogram[0];
+        for (int i = 1; i < 256; i++) {
+            cumulativeHistogram[i] = cumulativeHistogram[i - 1] + histogram[i];
+        }
+        double[] normalizedHistogram = new double[256];
+        for (int i = 0; i < 256; i++) {
+            normalizedHistogram[i] = (double) cumulativeHistogram[i] / totalPixels * 255;
+        }
+        for (int y = 0; y < imageWrapper.getHeight(); y++) {
+            for (int x = 0; x < imageWrapper.getWidth(); x++) {
+                Color color = pixelReader.getColor(x, y);
+                double red = color.getRed() * 255;
+                double green = color.getGreen() * 255;
+                double blue = color.getBlue() * 255;
+                int gray = (int) ((red + green + blue) / 3);
+                double newGray = normalizedHistogram[gray];
+                double newRed = newGray / 255;
+                double newGreen = newGray / 255;
+                double newBlue = newGray / 255;
+                double opacity = color.getOpacity();
+                pixelWriter.setColor(x, y, new Color(newRed, newGreen, newBlue, opacity));
+            }
+        }
+
+        return writableImage;
+    }
 }

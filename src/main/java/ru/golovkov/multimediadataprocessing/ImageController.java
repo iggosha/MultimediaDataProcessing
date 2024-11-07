@@ -64,7 +64,8 @@ public class ImageController implements Initializable {
                 "Градиент Робертса",
                 "Градиент Собеля",
                 "Лапласиан 90",
-                "Лапласиан 45"
+                "Лапласиан 45",
+                "Эквализация гистограммы"
         );
     }
 
@@ -104,7 +105,7 @@ public class ImageController implements Initializable {
             case "Негатив" -> transformedImage = imageTransformer.createNegativeImage(originalImageWrapper);
             case "Степенное преобразование" -> {
                 makeSlidersVisible(gammaSlider);
-                transformedImage = imageTransformer.createPowerLawTransformation(originalImageWrapper,gammaSlider.getValue());
+                transformedImage = imageTransformer.createPowerLawTransformation(originalImageWrapper, gammaSlider.getValue());
             }
             case "Вырезание диапазона яркостей" -> {
                 makeSlidersVisible(minBrightnessSlider, maxBrightnessSlider);
@@ -114,11 +115,12 @@ public class ImageController implements Initializable {
             case "Линейный сглаживающий (усредняющий) фильтр" ->
                     transformedImage = imageTransformer.createAverageFilter(originalImageWrapper);
             case "Медианный фильтр" -> transformedImage = imageTransformer.createMedianFilter(originalImageWrapper);
-            case "Градиент Робертса" ->
-                    transformedImage = imageTransformer.createRobertsGradient(originalImageWrapper);
+            case "Градиент Робертса" -> transformedImage = imageTransformer.createRobertsGradient(originalImageWrapper);
             case "Градиент Собеля" -> transformedImage = imageTransformer.createSobelGradient(originalImageWrapper);
             case "Лапласиан 90" -> transformedImage = imageTransformer.createLaplacian90(originalImageWrapper);
             case "Лапласиан 45" -> transformedImage = imageTransformer.createLaplacian45(originalImageWrapper);
+            case "Эквализация гистограммы" ->
+                    transformedImage = imageTransformer.createHistogramEqualization(originalImageWrapper);
             default -> throw new IllegalArgumentException("Ничего не выбрано");
         }
     }
@@ -135,7 +137,6 @@ public class ImageController implements Initializable {
         histogramChart.getData().clear();
         histogramChart.getData().add(series);
     }
-
 
     private int[] gatherHistogramData(ImageWrapper imageWrapper) {
         int[] histogram = new int[256];
@@ -160,7 +161,7 @@ public class ImageController implements Initializable {
     }
 
     private void makeSlidersVisible(Slider... sliders) {
-        for (Slider slider: sliders) {
+        for (Slider slider : sliders) {
             slider.setVisible(true);
         }
     }
