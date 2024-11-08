@@ -32,15 +32,14 @@ public class ImageTransformer {
 
     public Image createPowerLawTransformation(ImageWrapper imageWrapper, double gamma) {
         WritableImage writableImage = new WritableImage(imageWrapper.getWidth(), imageWrapper.getHeight());
-        int c = 1;
         PixelWriter pixelWriter = writableImage.getPixelWriter();
         PixelReader pixelReader = imageWrapper.getPixelReader();
         for (int y = 0; y < imageWrapper.getHeight(); y++) {
             for (int x = 0; x < imageWrapper.getWidth(); x++) {
                 Color color = pixelReader.getColor(x, y);
-                double red = c * Math.pow(color.getRed(), gamma);
-                double green = c * Math.pow(color.getGreen(), gamma);
-                double blue = c * Math.pow(color.getBlue(), gamma);
+                double red = Math.pow(color.getRed(), gamma);
+                double green = Math.pow(color.getGreen(), gamma);
+                double blue = Math.pow(color.getBlue(), gamma);
                 double opacity = color.getOpacity();
                 pixelWriter.setColor(x, y, new Color(red, green, blue, opacity));
             }
@@ -219,9 +218,9 @@ public class ImageTransformer {
                     }
                 }
 
-                double red = Math.min(Math.max(sumRed, 0), 1);
-                double green = Math.min(Math.max(sumGreen, 0), 1);
-                double blue = Math.min(Math.max(sumBlue, 0), 1);
+                double red = Math.clamp(sumRed, 0, 1);
+                double green = Math.clamp(sumGreen, 0, 1);
+                double blue = Math.clamp(sumBlue, 0, 1);
 
                 Color centerColor = pixelReader.getColor(x, y);
                 double opacity = centerColor.getOpacity();
@@ -251,9 +250,9 @@ public class ImageTransformer {
                     }
                 }
 
-                double red = Math.min(Math.max(sumRed, 0), 1);
-                double green = Math.min(Math.max(sumGreen, 0), 1);
-                double blue = Math.min(Math.max(sumBlue, 0), 1);
+                double red = Math.clamp(sumRed, 0, 1);
+                double green = Math.clamp(sumGreen, 0, 1);
+                double blue = Math.clamp(sumBlue, 0, 1);
 
                 Color centerColor = pixelReader.getColor(x, y);
                 double opacity = centerColor.getOpacity();
@@ -267,7 +266,6 @@ public class ImageTransformer {
         WritableImage writableImage = new WritableImage(imageWrapper.getWidth(), imageWrapper.getHeight());
         PixelWriter pixelWriter = writableImage.getPixelWriter();
         PixelReader pixelReader = imageWrapper.getPixelReader();
-
         int[] histogram = new int[256];
         int totalPixels = imageWrapper.getWidth() * imageWrapper.getHeight();
         for (int y = 0; y < imageWrapper.getHeight(); y++) {
@@ -304,7 +302,74 @@ public class ImageTransformer {
                 pixelWriter.setColor(x, y, new Color(newRed, newGreen, newBlue, opacity));
             }
         }
-
         return writableImage;
+    }
+
+    public Image applyThreshold(ImageWrapper imageWrapper, int threshold) {
+        int width = imageWrapper.getWidth();
+        int height = imageWrapper.getHeight();
+        threshold = 255 - threshold;
+        PixelReader pixelReader = imageWrapper.getPixelReader();
+        WritableImage binaryImage = new WritableImage(width, height);
+        PixelWriter pixelWriter = binaryImage.getPixelWriter();
+
+        writeImageWithThreshold(height, width, pixelReader, threshold, pixelWriter);
+
+        return binaryImage;
+    }
+
+    public Image applyOtsuThreshold(ImageWrapper imageWrapper) {
+        int width = imageWrapper.getWidth();
+        int height = imageWrapper.getHeight();
+        PixelReader pixelReader = imageWrapper.getPixelReader();
+        WritableImage binaryImage = new WritableImage(width, height);
+        PixelWriter pixelWriter = binaryImage.getPixelWriter();
+
+        int[] histogram = new int[256];
+
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                int brightness = (int) (pixelReader.getColor(x, y).getBrightness() * 255);
+                histogram[brightness]++;
+            }
+        }
+        double total = width * (double) height;
+        double sumB = 0;
+        double wB = 0;
+        double maximum = 0.0;
+        double threshold = 0.0;
+
+        for (int i = 0; i < 256; i++) {
+            wB += histogram[i];
+            if (wB != 0) {
+                double wF = total - wB;
+                if (wF != 0) {
+                    sumB += i * histogram[i];
+                    double mB = sumB / wB;
+                    double betweenClassVariance = wB * wF * Math.pow(mB, 2);
+                    if (betweenClassVariance > maximum) {
+                        maximum = betweenClassVariance;
+                        threshold = i;
+                    }
+                } else {
+                    break;
+                }
+            }
+        }
+        writeImageWithThreshold(height, width, pixelReader, threshold, pixelWriter);
+        return binaryImage;
+    }
+
+    private void writeImageWithThreshold(int height, int width, PixelReader pixelReader, double threshold, PixelWriter pixelWriter) {
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                int brightness = (int) (pixelReader.getColor(x, y).getBrightness() * 255);
+                if (brightness >= threshold) {
+                    pixelWriter.setColor(x, y, Color.WHITE);
+                } else {
+                    pixelWriter.setColor(x, y, Color.BLACK);
+                }
+            }
+        }
     }
 }
