@@ -4,8 +4,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.chart.BarChart;
 import javafx.scene.chart.XYChart;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.Slider;
+import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.image.PixelReader;
@@ -43,6 +42,9 @@ public class ImageController implements Initializable {
     @FXML
     private Slider gammaSlider;
 
+    @FXML
+    private CheckBox maskColorCheckBox;
+
     private ImageTransformer imageTransformer;
 
     private Image originalImage;
@@ -67,7 +69,13 @@ public class ImageController implements Initializable {
                 "Лапласиан 45",
                 "Эквализация гистограммы",
                 "Пороговая обработка",
-                "Метод Оцу"
+                "Метод Оцу",
+                "Дилатация",
+                "Эрозия",
+                "Замыкание",
+                "Размыкание",
+                "Выделение границ",
+                "Остов"
         );
     }
 
@@ -103,14 +111,17 @@ public class ImageController implements Initializable {
     }
 
     private void applyTransformation(String selectedTransformation) {
+        int[][] structuringElement = {{1, 1, 1}, {1, 1, 1}, {1, 1, 1}};
+        boolean isMaskColorBlack = maskColorCheckBox.isSelected();
+
         switch (selectedTransformation) {
             case "Негатив" -> transformedImage = imageTransformer.createNegativeImage(originalImageWrapper);
             case "Степенное преобразование" -> {
-                makeSlidersVisible(gammaSlider);
+                makeControlsVisible(gammaSlider);
                 transformedImage = imageTransformer.createPowerLawTransformation(originalImageWrapper, gammaSlider.getValue());
             }
             case "Вырезание диапазона яркостей" -> {
-                makeSlidersVisible(minBrightnessSlider, maxBrightnessSlider);
+                makeControlsVisible(minBrightnessSlider, maxBrightnessSlider);
                 transformedImage = imageTransformer.createBrightnessRangeCut(originalImageWrapper,
                         (int) minBrightnessSlider.getValue(), (int) maxBrightnessSlider.getValue());
             }
@@ -124,10 +135,34 @@ public class ImageController implements Initializable {
             case "Лапласиан 45" -> transformedImage = imageTransformer.createLaplacian45(originalImageWrapper);
             case "Эквализация гистограммы" -> transformedImage = imageTransformer.createHistogramEqualization(originalImageWrapper);
             case "Пороговая обработка" -> {
-                makeSlidersVisible(minBrightnessSlider);
+                makeControlsVisible(minBrightnessSlider);
                 transformedImage = imageTransformer.applyThreshold(originalImageWrapper, (int) minBrightnessSlider.getValue());
             }
             case "Метод Оцу" -> transformedImage = imageTransformer.applyOtsuThreshold(originalImageWrapper);
+            case "Дилатация" -> {
+                makeControlsVisible(maskColorCheckBox);
+                transformedImage = imageTransformer.dilate(originalImageWrapper, structuringElement, isMaskColorBlack);
+            }
+            case "Эрозия" -> {
+                makeControlsVisible(maskColorCheckBox);
+                transformedImage = imageTransformer.erode(originalImageWrapper, structuringElement, isMaskColorBlack);
+            }
+            case "Замыкание" -> {
+                makeControlsVisible(maskColorCheckBox);
+                transformedImage = imageTransformer.close(originalImageWrapper, structuringElement, isMaskColorBlack);
+            }
+            case "Размыкание" -> {
+                makeControlsVisible(maskColorCheckBox);
+                transformedImage = imageTransformer.open(originalImageWrapper, structuringElement, isMaskColorBlack);
+            }
+            case "Выделение границ" -> {
+                makeControlsVisible(maskColorCheckBox);
+                transformedImage = imageTransformer.boundaryExtraction(originalImageWrapper, structuringElement, isMaskColorBlack);
+            }
+            case "Остов" -> {
+                makeControlsVisible(maskColorCheckBox);
+                transformedImage = imageTransformer.skeletonize(originalImageWrapper, isMaskColorBlack);
+            }
             default -> throw new IllegalArgumentException("Ничего не выбрано");
         }
     }
@@ -165,11 +200,12 @@ public class ImageController implements Initializable {
         gammaSlider.setVisible(false);
         minBrightnessSlider.setVisible(false);
         maxBrightnessSlider.setVisible(false);
+        maskColorCheckBox.setVisible(false);
     }
 
-    private void makeSlidersVisible(Slider... sliders) {
-        for (Slider slider : sliders) {
-            slider.setVisible(true);
+    private void makeControlsVisible(Control... controls) {
+        for (Control control : controls) {
+            control.setVisible(true);
         }
     }
 }

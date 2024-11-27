@@ -4,6 +4,7 @@
 <?import javafx.scene.chart.CategoryAxis?>
 <?import javafx.scene.chart.NumberAxis?>
 <?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
 <?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.Slider?>
 <?import javafx.scene.image.ImageView?>
@@ -17,6 +18,7 @@
                 <Button minWidth="200.0" onAction="#handleOpenImage" text="Выбрать изображение" />
                 <ComboBox fx:id="transformationComboBox" minWidth="200.0" promptText="Выберите преобразование" />
                 <Button minWidth="200.0" onAction="#handleApplyTransformation" text="Применить" />
+            <CheckBox fx:id="maskColorCheckBox" mnemonicParsing="false" text="Маска чёрная" />
             </children>
         </HBox>
         <HBox alignment="CENTER" spacing="25.0">

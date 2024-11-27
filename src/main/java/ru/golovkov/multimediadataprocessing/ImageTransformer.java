@@ -372,4 +372,186 @@ public class ImageTransformer {
             }
         }
     }
+
+    public Image dilate(ImageWrapper imageWrapper, int[][] structuringElement, boolean isMaskColorBlack) {
+        int width = imageWrapper.getWidth();
+        int height = imageWrapper.getHeight();
+        WritableImage outputImage = new WritableImage(width, height);
+        PixelReader reader = imageWrapper.getPixelReader();
+        PixelWriter writer = outputImage.getPixelWriter();
+
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                boolean result = false;
+
+                for (int i = 0; i < structuringElement.length; i++) {
+                    for (int j = 0; j < structuringElement[0].length; j++) {
+                        int offsetX = x + i - structuringElement.length / 2;
+                        int offsetY = y + j - structuringElement[0].length / 2;
+                        if (offsetX >= 0 && offsetY >= 0 && offsetX < width && offsetY < height) {
+                            int pixelValue = reader.getArgb(offsetX, offsetY) == (isMaskColorBlack ? 0xFF000000 : 0xFFFFFFFF) ? 1 : 0;
+                            result = result || (pixelValue == structuringElement[i][j]);
+                        }
+                    }
+                }
+                writer.setArgb(x, y, result ? (isMaskColorBlack ? 0xFF000000 : 0xFFFFFFFF) : (isMaskColorBlack ? 0xFFFFFFFF : 0xFF000000));
+            }
+        }
+        return outputImage;
+    }
+
+    public Image erode(ImageWrapper imageWrapper, int[][] structuringElement, boolean isMaskColorBlack) {
+        int width = imageWrapper.getWidth();
+        int height = imageWrapper.getHeight();
+        WritableImage outputImage = new WritableImage(width, height);
+        PixelReader reader = imageWrapper.getPixelReader();
+        PixelWriter writer = outputImage.getPixelWriter();
+
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                boolean result = true;
+
+                for (int i = 0; i < structuringElement.length; i++) {
+                    for (int j = 0; j < structuringElement[0].length; j++) {
+                        int offsetX = x + i - structuringElement.length / 2;
+                        int offsetY = y + j - structuringElement[0].length / 2;
+                        if (offsetX >= 0 && offsetY >= 0 && offsetX < width && offsetY < height) {
+                            int pixelValue = reader.getArgb(offsetX, offsetY) == (isMaskColorBlack ? 0xFF000000 : 0xFFFFFFFF) ? 1 : 0;
+                            result = result && (pixelValue == structuringElement[i][j]);
+                        }
+                    }
+                }
+                writer.setArgb(x, y, result ? (isMaskColorBlack ? 0xFF000000 : 0xFFFFFFFF) : (isMaskColorBlack ? 0xFFFFFFFF : 0xFF000000));
+            }
+        }
+        return outputImage;
+    }
+
+    public Image close(ImageWrapper imageWrapper, int[][] structuringElement, boolean isMaskColorBlack) {
+        Image dilated = dilate(imageWrapper, structuringElement, isMaskColorBlack);
+        return erode(new ImageWrapper(dilated), structuringElement, isMaskColorBlack);
+    }
+
+    public Image open(ImageWrapper imageWrapper, int[][] structuringElement, boolean isMaskColorBlack) {
+        Image eroded = erode(imageWrapper, structuringElement, isMaskColorBlack);
+        return dilate(new ImageWrapper(eroded), structuringElement, isMaskColorBlack);
+    }
+
+    public Image boundaryExtraction(ImageWrapper imageWrapper, int[][] structuringElement, boolean isMaskColorBlack) {
+        Image dilated = dilate(imageWrapper, structuringElement, isMaskColorBlack);
+        return subtractImages(new ImageWrapper(dilated), imageWrapper, isMaskColorBlack);
+    }
+
+    public Image skeletonize(ImageWrapper imageWrapper, boolean isMaskColorBlack) {
+        int width = imageWrapper.getWidth();
+        int height = imageWrapper.getHeight();
+        WritableImage outputImage = new WritableImage(width, height);
+        PixelReader reader = imageWrapper.getPixelReader();
+        PixelWriter writer = outputImage.getPixelWriter();
+
+        boolean[][] image = new boolean[height][width];
+        boolean[][] marker = new boolean[height][width];
+
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                image[y][x] = reader.getArgb(x, y) == (isMaskColorBlack ? 0xFF000000 : 0xFFFFFFFF);
+                marker[y][x] = false;
+            }
+        }
+
+        boolean hasChanged;
+        do {
+            hasChanged = false;
+
+            for (int y = 1; y < height - 1; y++) {
+                for (int x = 1; x < width - 1; x++) {
+                    if (image[y][x] && canBeRemoved(image, x, y, true)) {
+                        marker[y][x] = true;
+                        hasChanged = true;
+                    }
+                }
+            }
+
+            for (int y = 1; !(height - 1 <= y); y++) {
+                for (int x = 1; x < width - 1; x++) {
+                    if (marker[y][x]) {
+                        image[y][x] = false;
+                        marker[y][x] = false;
+                    }
+                }
+            }
+            for (int y = 1; y < height - 1; y++) {
+                for (int x = 1; x < width - 1; x++) {
+                    if (image[y][x] && canBeRemoved(image, x, y, false)) {
+                        marker[y][x] = true;
+                        hasChanged = true;
+                    }
+                }
+            }
+
+            for (int y = 1; y < height - 1; y++) {
+                for (int x = 1; x < width - 1; x++) {
+                    if (marker[y][x]) {
+                        image[y][x] = false;
+                        marker[y][x] = false;
+                    }
+                }
+            }
+        } while (hasChanged);
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                writer.setArgb(x, y, image[y][x] ? (isMaskColorBlack ? 0xFF000000 : 0xFFFFFFFF) : (isMaskColorBlack ? 0xFFFFFFFF : 0xFF000000));
+            }
+        }
+
+        return outputImage;
+    }
+
+    private boolean canBeRemoved(boolean[][] image, int x, int y, boolean firstStep) {
+        int p2 = image[y - 1][x] ? 1 : 0;
+        int p3 = image[y - 1][x + 1] ? 1 : 0;
+        int p4 = image[y][x + 1] ? 1 : 0;
+        int p5 = image[y + 1][x + 1] ? 1 : 0;
+        int p6 = image[y + 1][x] ? 1 : 0;
+        int p7 = image[y + 1][x - 1] ? 1 : 0;
+        int p8 = image[y][x - 1] ? 1 : 0;
+        int p9 = image[y - 1][x - 1] ? 1 : 0;
+
+        int B = p2 + p3 + p4 + p5 + p6 + p7 + p8 + p9;
+        int A = (p2 == 0 && p3 == 1) ? 1 : 0;
+        A += !(p3 != 0 || p4 != 1) ? 1 : 0;
+        A += !(p4 != 0 || p5 != 1) ? 1 : 0;
+        A += (p5 == 0 && p6 == 1) ? 1 : 0;
+        A += (p6 == 0 && p7 == 1) ? 1 : 0;
+        A += (p7 == 0 && p8 == 1) ? 1 : 0;
+        A += (p8 == 0 && p9 == 1) ? 1 : 0;
+        A += (p9 == 0 && p2 == 1) ? 1 : 0;
+
+        if (B >= 2 && B <= 6 && A == 1) {
+            if (firstStep) {
+                return p2 * p4 * p6 == 0 && p4 * p6 * p8 == 0;
+            } else {
+                return p2 * p4 * p8 == 0 && p2 * p6 * p8 == 0;
+            }
+        }
+        return false;
+    }
+
+    private Image subtractImages(ImageWrapper img1Wrapper, ImageWrapper img2Wrapper, boolean isMaskColorBlack) {
+        int width = img1Wrapper.getWidth();
+        int height = img1Wrapper.getHeight();
+        WritableImage outputImage = new WritableImage(width, height);
+        PixelReader reader1 = img1Wrapper.getPixelReader();
+        PixelReader reader2 = img2Wrapper.getPixelReader();
+        PixelWriter writer = outputImage.getPixelWriter();
+
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                int pixel1 = reader1.getArgb(x, y);
+                int pixel2 = reader2.getArgb(x, y);
+                writer.setArgb(x, y, pixel1 != pixel2 ? (isMaskColorBlack ? 0xFF000000 : 0xFFFFFFFF) : (isMaskColorBlack ? 0xFFFFFFFF : 0xFF000000));
+            }
+        }
+        return outputImage;
+    }
 }
