@@ -10,46 +10,55 @@
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
-
-<VBox minHeight="900.0" minWidth="1600.0" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ru.golovkov.multimediadataprocessing.ImageController">
+<VBox minHeight="900.0" minWidth="1600.0" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="ru.golovkov.multimediadataprocessing.ImageController">
     <children>
         <HBox alignment="CENTER" minHeight="100.0" spacing="25.0">
-            <children>
-                <Button minWidth="200.0" onAction="#handleOpenImage" text="Выбрать изображение" />
-                <ComboBox fx:id="transformationComboBox" minWidth="200.0" promptText="Выберите преобразование" />
-                <Button minWidth="200.0" onAction="#handleApplyTransformation" text="Применить" />
-            <CheckBox fx:id="maskColorCheckBox" mnemonicParsing="false" text="Маска чёрная" />
-            </children>
+            <Button minWidth="200.0" onAction="#handleOpenImage" text="Выбрать изображение"/>
+            <ComboBox fx:id="transformationComboBox" minWidth="200.0" promptText="Выберите преобразование"/>
+            <Button minWidth="200.0" onAction="#handleApplyTransformation" text="Применить"/>
+            <CheckBox fx:id="maskColorCheckBox" mnemonicParsing="false" text="Маска чёрная"/>
+            <CheckBox fx:id="replaceOriginalCheckBox" mnemonicParsing="false" text="Заменить исходное изображение"/>
+            <Button minWidth="200.0" onAction="#handleSaveImage" text="Сохранить изображение"/>
         </HBox>
         <HBox alignment="CENTER" spacing="25.0">
             <children>
-                <Slider fx:id="minBrightnessSlider" max="255.0" min="0" minWidth="255.0" minorTickCount="1" showTickLabels="true" showTickMarks="true" value="100.0" />
-                <Slider fx:id="maxBrightnessSlider" max="255.0" min="0" minWidth="255.0" minorTickCount="1" showTickLabels="true" showTickMarks="true" value="200.0" />
-                <Slider fx:id="gammaSlider" majorTickUnit="0.5" max="3.0" min="0.1" minWidth="300.0" minorTickCount="5" showTickLabels="true" showTickMarks="true" value="1.0" />
+                <Slider fx:id="minBrightnessSlider" max="255.0" min="0" minWidth="255.0" minorTickCount="1"
+                        showTickLabels="true" showTickMarks="true" value="100.0"/>
+                <Slider fx:id="maxBrightnessSlider" max="255.0" min="0" minWidth="255.0" minorTickCount="1"
+                        showTickLabels="true" showTickMarks="true" value="200.0"/>
+                <Slider fx:id="gammaSlider" majorTickUnit="0.5" max="3.0" min="0.1" minWidth="300.0" minorTickCount="5"
+                        showTickLabels="true" showTickMarks="true" value="1.0"/>
             </children>
         </HBox>
-        <HBox alignment="CENTER" maxHeight="400.0" minHeight="400.0" prefHeight="400.0" spacing="25.0" style="-fx-background-color: #FFFFFF;">
+        <HBox alignment="CENTER" maxHeight="400.0" minHeight="400.0" prefHeight="400.0" spacing="25.0"
+              style="-fx-background-color: #FFFFFF;">
             <children>
-                <ImageView fx:id="originalImageView" fitHeight="400" fitWidth="400" preserveRatio="true" />
-                <ImageView fx:id="transformedImageView" fitHeight="400" fitWidth="400" preserveRatio="true" />
+                <ImageView fx:id="originalImageView" fitHeight="400" fitWidth="400" preserveRatio="true"/>
+                <ImageView fx:id="transformedImageView" fitHeight="400" fitWidth="400" preserveRatio="true"/>
             </children>
         </HBox>
-        <HBox alignment="CENTER" maxHeight="400.0" maxWidth="1600.0" minHeight="400.0" minWidth="1600.0" prefHeight="400.0" prefWidth="1600.0" spacing="25.0">
+        <HBox alignment="CENTER" maxHeight="400.0" maxWidth="1600.0" minHeight="400.0" minWidth="1600.0"
+              prefHeight="400.0" prefWidth="1600.0" spacing="25.0">
             <children>
-                <BarChart fx:id="originalHistogramChart" barGap="1.0" categoryGap="1.0" maxHeight="400.0" maxWidth="700.0" minHeight="400.0" minWidth="700.0" prefHeight="400.0" prefWidth="700.0" style="-fx-background-color: #FFFFFF;" title="Гистограмма оригинального изображения">
+                <BarChart fx:id="originalHistogramChart" barGap="1.0" categoryGap="1.0" maxHeight="400.0"
+                          maxWidth="700.0" minHeight="400.0" minWidth="700.0" prefHeight="400.0" prefWidth="700.0"
+                          style="-fx-background-color: #FFFFFF;" title="Гистограмма оригинального изображения">
                     <xAxis>
-                        <CategoryAxis side="BOTTOM" />
+                        <CategoryAxis side="BOTTOM"/>
                     </xAxis>
                     <yAxis>
-                        <NumberAxis side="LEFT" />
+                        <NumberAxis side="LEFT"/>
                     </yAxis>
                 </BarChart>
-                <BarChart fx:id="transformedHistogramChart" barGap="1.0" categoryGap="1.0" maxHeight="400.0" maxWidth="700.0" minHeight="400.0" minWidth="700.0" prefHeight="400.0" prefWidth="700.0" style="-fx-background-color: #FFFFFF;" title="Гистограмма преобразованного изображения">
+                <BarChart fx:id="transformedHistogramChart" barGap="1.0" categoryGap="1.0" maxHeight="400.0"
+                          maxWidth="700.0" minHeight="400.0" minWidth="700.0" prefHeight="400.0" prefWidth="700.0"
+                          style="-fx-background-color: #FFFFFF;" title="Гистограмма преобразованного изображения">
                     <xAxis>
-                        <CategoryAxis side="BOTTOM" />
+                        <CategoryAxis side="BOTTOM"/>
                     </xAxis>
                     <yAxis>
-                        <NumberAxis side="LEFT" />
+                        <NumberAxis side="LEFT"/>
                     </yAxis>
                 </BarChart>
             </children>

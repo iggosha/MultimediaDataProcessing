@@ -8,11 +8,15 @@ import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.image.PixelReader;
+import javafx.scene.image.WritableImage;
 import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
 
@@ -44,6 +48,9 @@ public class ImageController implements Initializable {
 
     @FXML
     private CheckBox maskColorCheckBox;
+
+    @FXML
+    private CheckBox replaceOriginalCheckBox;
 
     private ImageTransformer imageTransformer;
 
@@ -108,6 +115,73 @@ public class ImageController implements Initializable {
         applyTransformation(selectedTransformation);
         transformedImageView.setImage(transformedImage);
         displayHistogram(transformedImage, transformedHistogramChart);
+
+        if (replaceOriginalCheckBox.isSelected()) {
+            originalImage = transformedImage;
+            originalImageView.setImage(originalImage);
+            displayHistogram(originalImage, originalHistogramChart);
+            originalImageWrapper = new ImageWrapper(originalImage);
+        }
+    }
+
+    @FXML
+    private void handleSaveImage() {
+        if (transformedImage == null) {
+            return;
+        }
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Сохранить изображение");
+        fileChooser.getExtensionFilters().addAll(
+                new FileChooser.ExtensionFilter("PNG", "*.png"),
+                new FileChooser.ExtensionFilter("JPG", "*.jpg"),
+                new FileChooser.ExtensionFilter("JPEG", "*.jpeg"),
+                new FileChooser.ExtensionFilter("GIF", "*.gif")
+        );
+        File selectedFile = fileChooser.showSaveDialog(new Stage());
+        if (selectedFile != null) {
+            try {
+                BufferedImage bufferedImage = convertToBufferedImage(transformedImage);
+                String formatName = getFormatName(selectedFile);
+                ImageIO.write(bufferedImage, formatName, selectedFile);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private String getFormatName(File file) {
+        String fileName = file.getName();
+        int dotIndex = fileName.lastIndexOf('.');
+        if (dotIndex >= 0) {
+            return fileName.substring(dotIndex + 1);
+        }
+        return "png"; // Default format
+    }
+
+    private BufferedImage convertToBufferedImage(Image image) {
+        int width = (int) image.getWidth();
+        int height = (int) image.getHeight();
+        WritableImage writableImage = new WritableImage(width, height);
+        PixelReader pixelReader = image.getPixelReader();
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                Color color = pixelReader.getColor(x, y);
+                writableImage.getPixelWriter().setColor(x, y, color);
+            }
+        }
+        BufferedImage bufferedImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                Color color = writableImage.getPixelReader().getColor(x, y);
+                int r = (int) (color.getRed() * 255);
+                int g = (int) (color.getGreen() * 255);
+                int b = (int) (color.getBlue() * 255);
+                int a = (int) (color.getOpacity() * 255);
+                int rgba = (a << 24) | (r << 16) | (g << 8) | b;
+                bufferedImage.setRGB(x, y, rgba);
+            }
+        }
+        return bufferedImage;
     }
 
     private void applyTransformation(String selectedTransformation) {
