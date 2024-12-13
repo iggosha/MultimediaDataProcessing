@@ -71,6 +71,40 @@ public class ImageTransformer {
         return writableImage;
     }
 
+    public Image createBrightnessRangeCut2(ImageWrapper imageWrapper, int minBrightness, int maxBrightness) {
+        WritableImage writableImage = new WritableImage(imageWrapper.getWidth(), imageWrapper.getHeight());
+        PixelWriter pixelWriter = writableImage.getPixelWriter();
+        PixelReader pixelReader = imageWrapper.getPixelReader();
+
+        for (int y = 0; y < imageWrapper.getHeight(); y++) {
+            for (int x = 0; x < imageWrapper.getWidth(); x++) {
+                Color color = pixelReader.getColor(x, y);
+                double red = color.getRed() * 255;
+                double green = color.getGreen() * 255;
+                double blue = color.getBlue() * 255;
+                if (minBrightness == 0 && maxBrightness == 255) {
+                    red /= 255;
+                    green /= 255;
+                    blue /= 255;
+                } else {
+                    if (red < minBrightness || green < minBrightness || blue < minBrightness) {
+                        red = green = blue = 0; // Черный цвет
+                    } else if (red > maxBrightness || green > maxBrightness || blue > maxBrightness) {
+                        red = green = blue = 1; // Белый цвет
+                    } else {
+                        red /= 255;
+                        green /= 255;
+                        blue /= 255;
+                    }
+                }
+
+                double opacity = color.getOpacity();
+                pixelWriter.setColor(x, y, new Color(red, green, blue, opacity));
+            }
+        }
+        return writableImage;
+    }
+
     public Image createAverageFilter(ImageWrapper imageWrapper) {
         WritableImage writableImage = new WritableImage(imageWrapper.getWidth(), imageWrapper.getHeight());
         PixelWriter pixelWriter = writableImage.getPixelWriter();

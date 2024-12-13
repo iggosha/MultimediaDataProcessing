@@ -68,6 +68,7 @@ public class ImageController implements Initializable {
                 "Негатив",
                 "Степенное преобразование",
                 "Вырезание диапазона яркостей",
+                "Вырезание диапазона яркостей 2",
                 "Линейный сглаживающий (усредняющий) фильтр",
                 "Медианный фильтр",
                 "Градиент Робертса",
@@ -197,6 +198,11 @@ public class ImageController implements Initializable {
             case "Вырезание диапазона яркостей" -> {
                 makeControlsVisible(minBrightnessSlider, maxBrightnessSlider);
                 transformedImage = imageTransformer.createBrightnessRangeCut(originalImageWrapper,
+                        (int) minBrightnessSlider.getValue(), (int) maxBrightnessSlider.getValue());
+            }
+            case "Вырезание диапазона яркостей 2" -> {
+                makeControlsVisible(minBrightnessSlider, maxBrightnessSlider);
+                transformedImage = imageTransformer.createBrightnessRangeCut2(originalImageWrapper,
                         (int) minBrightnessSlider.getValue(), (int) maxBrightnessSlider.getValue());
             }
             case "Линейный сглаживающий (усредняющий) фильтр" ->
